@@ -2,14 +2,16 @@ const express = require("express");
 const app = express();
 app.use(express.json());
 
-const cards = [];
+let cards = []; // Use let for reassignment in DELETE route
 const PASSCODE = process.env.PASSCODE || "2516";
 
-app.post("/", (req, res) => {
+app.post("/api/cards", (req, res) => {
+  // Added /api/cards
   const { title, shortDesc, longDesc, imageUrl, passcode } = req.body;
 
-  if (passcode !== PASSCODE) {
-    return res.status(403).json({ error: "Invalid passcode." });
+  if (!passcode || passcode !== PASSCODE) {
+    // Check if passcode is provided
+    return res.status(403).json({ error: "Invalid or missing passcode." });
   }
 
   if (!title || !shortDesc || !longDesc) {
@@ -18,12 +20,25 @@ app.post("/", (req, res) => {
 
   const card = { title, shortDesc, longDesc, imageUrl };
   cards.push(card);
-  res.status(201).json({ message: "Card added successfully." });
+  res.status(201).json({ message: "Card added successfully.", card: card }); // Return the created card
 });
 
-app.delete("/", (req, res) => {
+app.get("/api/cards", (req, res) => {
+  // Added GET route
+  res.json(cards);
+});
+
+app.delete("/api/cards", (req, res) => {
+  // Added /api/cards
   const { title } = req.body;
+  if (!title) {
+    return res.status(400).json({ error: "Title is required for deletion." });
+  }
+  const initialLength = cards.length;
   cards = cards.filter((card) => card.title !== title);
+  if (initialLength === cards.length) {
+    return res.status(404).json({ error: "Card not found." });
+  }
   res.json({ message: "Card deleted successfully." });
 });
 
