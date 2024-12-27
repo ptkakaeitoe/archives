@@ -1,10 +1,7 @@
-const express = require("express");
-const app = express();
-
-const PASSCODE = process.env.PASSCODE || "2516";
-
-app.get("/", (req, res) => {
-  res.json({ passcode: PASSCODE });
-});
-
-module.exports = app;
+module.exports = (req, res) => {
+  if (req.method === "GET") {
+    res.status(200).json({ passcode: "2516" });
+  } else {
+    res.status(405).send("Method Not Allowed");
+  }
+};
