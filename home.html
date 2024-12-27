@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Projects in archives</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .card-expandable .card-body {
+        cursor: pointer;
+      }
+
+      .card-expanded .card-body {
+        cursor: default;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .card-img-top {
+        object-fit: cover; /* or contain, depending on your preference */
+        height: 200px; /* Set a fixed height for the images */
+      }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+
+  <body>
+    <div class="container mt-5">
+      <h1>Projects in archives</h1>
+      <div class="row" id="cardContainer"></div>
+
+      <button
+        class="btn btn-primary mt-3"
+        data-bs-toggle="modal"
+        data-bs-target="#addCardModal"
+      >
+        Add New Project
+      </button>
+    </div>
+
+    <div
+      class="modal fade"
+      id="addCardModal"
+      tabindex="-1"
+      aria-labelledby="addCardModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addCardModalLabel">Add New Card</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="cardTitle" class="form-label">Title</label>
+              <input type="text" class="form-control" id="cardTitle" />
+            </div>
+            <div class="mb-3">
+              <label for="cardShortDesc" class="form-label"
+                >Short Description</label
+              >
+              <textarea
+                class="form-control"
+                id="cardShortDesc"
+                rows="3"
+              ></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="cardLongDesc" class="form-label"
+                >Long Description</label
+              >
+              <textarea
+                class="form-control"
+                id="cardLongDesc"
+                rows="5"
+              ></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="cardImage" class="form-label"
+                >Image URL (Optional)</label
+              >
+              <input type="text" class="form-control" id="cardImage" />
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" class="form-control" id="password" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary" id="saveCard">
+              Save Card
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const cardContainer = document.getElementById("cardContainer");
+        const saveCardButton = document.getElementById("saveCard");
+        const cardTitleInput = document.getElementById("cardTitle");
+        const cardShortDescInput = document.getElementById("cardShortDesc");
+        const cardLongDescInput = document.getElementById("cardLongDesc");
+        const cardImageInput = document.getElementById("cardImage");
+        const passwordInput = document.getElementById("password");
+        const correctPassword = "1234";
+
+        const API_URL = "http://localhost:3000";
+
+        // Fetch cards from the server
+        const loadCards = async () => {
+          try {
+            const response = await axios.get(`${API_URL}/cards`);
+            const cards = response.data;
+
+            cardContainer.innerHTML = ""; // Clear existing cards
+            cards.forEach((card) => createCard(card));
+          } catch (error) {
+            console.error("Error loading cards:", error);
+          }
+        };
+
+        // Create a card DOM element
+        const createCard = (card) => {
+          const newCard = document.createElement("div");
+          newCard.classList.add("col-md-4", "mb-4", "card-expandable");
+
+          let imageHtml = "";
+          if (card.imageUrl) {
+            imageHtml = `<img src="${card.imageUrl}" class="card-img-top" alt="${card.title}">`;
+          }
+
+          newCard.innerHTML = `
+            <div class="card">
+              ${imageHtml}
+              <div class="card-body">
+                <h5 class="card-title">${card.title}</h5>
+                <p class="card-text">${card.shortDesc}</p>
+                <div class="long-description hidden">
+                  <p>${card.longDesc}</p>
+                </div>
+                <button class="btn btn-danger btn-sm delete-card">Delete</button>
+              </div>
+            </div>
+          `;
+
+          newCard.addEventListener("click", (event) => {
+            if (event.target.classList.contains("delete-card")) return; // Prevent expand on delete
+            newCard.classList.toggle("card-expanded");
+            const longDescription = newCard.querySelector(".long-description");
+            longDescription.classList.toggle("hidden");
+          });
+
+          const deleteButton = newCard.querySelector(".delete-card");
+          deleteButton.addEventListener("click", async (event) => {
+            event.stopPropagation(); // Prevent expand on delete
+            try {
+              await axios.delete(`${API_URL}/cards`, {
+                data: { title: card.title },
+              });
+              cardContainer.removeChild(newCard);
+            } catch (error) {
+              console.error("Error deleting card:", error);
+            }
+          });
+
+          cardContainer.appendChild(newCard);
+        };
+
+        saveCardButton.addEventListener("click", async () => {
+          const title = cardTitleInput.value;
+          const shortDesc = cardShortDescInput.value;
+          const longDesc = cardLongDescInput.value;
+          const imageUrl = cardImageInput.value;
+          const password = passwordInput.value;
+
+          const card = {
+            title,
+            shortDesc,
+            longDesc,
+            imageUrl,
+            passcode: password,
+          };
+
+          try {
+            const response = await axios.post(`${API_URL}/cards`, card);
+
+            if (response.status === 201) {
+              createCard(card);
+
+              // Reset form fields
+              cardTitleInput.value = "";
+              cardShortDescInput.value = "";
+              cardLongDescInput.value = "";
+              cardImageInput.value = "";
+              passwordInput.value = "";
+
+              const modal = bootstrap.Modal.getInstance(
+                document.getElementById("addCardModal")
+              );
+              modal.hide();
+            }
+          } catch (error) {
+            if (error.response && error.response.status === 403) {
+              alert("Incorrect passcode.");
+            } else {
+              console.error("Error saving card:", error);
+            }
+          }
+        });
+
+        // Load cards on page load
+        loadCards();
+      });
+    </script>
+  </body>
+</html>
