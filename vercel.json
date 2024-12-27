@@ -40,6 +40,10 @@
       "dest": "api/blogs.js"
     },
     {
+      "src": "/api/blogs/(.*)",
+      "dest": "api/blogs.js"
+    },
+    {
       "src": "/",
       "dest": "/index.html"
     },

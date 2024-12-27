@@ -1,6 +1,6 @@
 let blogs = []; // Temporary in-memory storage. Replace with a database for production.
 
-module.exports = (req, res) => {
+module.exports = async (req, res) => {
   const { method } = req;
 
   if (method === "GET") {
@@ -13,12 +13,14 @@ module.exports = (req, res) => {
     if (passcode !== "2516") {
       return res.status(403).send("Forbidden");
     }
+
     const { title, description, imageUrl } = req.body;
     if (!title || !description) {
       return res
         .status(400)
         .json({ error: "Title and Description are required." });
     }
+
     const newBlog = {
       id: Date.now().toString(),
       title,
@@ -30,21 +32,16 @@ module.exports = (req, res) => {
   }
 
   if (method === "DELETE") {
-    let body = "";
-    req.on("data", (chunk) => {
-      body += chunk.toString();
-    });
-    req.on("end", () => {
-      const { id, passcode } = JSON.parse(body);
+    // Use req.body for DELETE as well
+    const { id, passcode } = req.body;
 
-      if (passcode !== "2516") {
-        return res.status(403).send("Forbidden");
-      }
+    if (passcode !== "2516") {
+      return res.status(403).send("Forbidden");
+    }
 
-      blogs = blogs.filter((blog) => blog.id !== id);
-      return res.status(204).send();
-    });
-  } else {
-    return res.status(405).send("Method Not Allowed");
+    blogs = blogs.filter((blog) => blog.id !== id);
+    return res.status(204).send();
   }
+
+  return res.status(405).send("Method Not Allowed");
 };
