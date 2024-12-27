@@ -10,11 +10,19 @@
       "use": "@vercel/node"
     },
     {
+      "src": "api/blogs.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "index.html",
       "use": "@vercel/static"
     },
     {
       "src": "home.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "blog.html",
       "use": "@vercel/static"
     }
   ],
@@ -28,12 +36,20 @@
       "dest": "api/passcode.js"
     },
     {
+      "src": "/api/blogs",
+      "dest": "api/blogs.js"
+    },
+    {
       "src": "/",
       "dest": "/index.html"
     },
     {
       "src": "/home",
       "dest": "/home.html"
+    },
+    {
+      "src": "/blog",
+      "dest": "/blog.html"
     }
   ]
 }
