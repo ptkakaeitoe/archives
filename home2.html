@@ -22,10 +22,11 @@
       }
 
       .card-img-top {
-        object-fit: cover;
-        height: 200px;
+        object-fit: cover; /* or contain, depending on your preference */
+        height: 200px; /* Set a fixed height for the images */
       }
     </style>
+
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   </head>
 
@@ -118,27 +119,37 @@
       document.addEventListener("DOMContentLoaded", () => {
         const cardContainer = document.getElementById("cardContainer");
         const saveCardButton = document.getElementById("saveCard");
-        const API_URL = window.location.origin;
+        const cardTitleInput = document.getElementById("cardTitle");
+        const cardShortDescInput = document.getElementById("cardShortDesc");
+        const cardLongDescInput = document.getElementById("cardLongDesc");
+        const cardImageInput = document.getElementById("cardImage");
+        const passwordInput = document.getElementById("password");
+        const correctPassword = "1234";
 
+        const API_URL = "http://localhost:3000";
+
+        // Fetch cards from the server
         const loadCards = async () => {
           try {
-            const response = await axios.get(`${API_URL}/api/cards`);
+            const response = await axios.get(`${API_URL}/cards`);
             const cards = response.data;
 
-            cardContainer.innerHTML = "";
+            cardContainer.innerHTML = ""; // Clear existing cards
             cards.forEach((card) => createCard(card));
           } catch (error) {
             console.error("Error loading cards:", error);
           }
         };
 
+        // Create a card DOM element
         const createCard = (card) => {
           const newCard = document.createElement("div");
           newCard.classList.add("col-md-4", "mb-4", "card-expandable");
 
-          let imageHtml = card.imageUrl
-            ? `<img src="${card.imageUrl}" class="card-img-top" alt="${card.title}">`
-            : "";
+          let imageHtml = "";
+          if (card.imageUrl) {
+            imageHtml = `<img src="${card.imageUrl}" class="card-img-top" alt="${card.title}">`;
+          }
 
           newCard.innerHTML = `
             <div class="card">
@@ -155,7 +166,7 @@
           `;
 
           newCard.addEventListener("click", (event) => {
-            if (event.target.classList.contains("delete-card")) return;
+            if (event.target.classList.contains("delete-card")) return; // Prevent expand on delete
             newCard.classList.toggle("card-expanded");
             const longDescription = newCard.querySelector(".long-description");
             longDescription.classList.toggle("hidden");
@@ -163,9 +174,9 @@
 
           const deleteButton = newCard.querySelector(".delete-card");
           deleteButton.addEventListener("click", async (event) => {
-            event.stopPropagation();
+            event.stopPropagation(); // Prevent expand on delete
             try {
-              await axios.delete(`${API_URL}/api/cards`, {
+              await axios.delete(`${API_URL}/cards`, {
                 data: { title: card.title },
               });
               cardContainer.removeChild(newCard);
@@ -178,28 +189,32 @@
         };
 
         saveCardButton.addEventListener("click", async () => {
-          const title = document.getElementById("cardTitle").value;
-          const shortDesc = document.getElementById("cardShortDesc").value;
-          const longDesc = document.getElementById("cardLongDesc").value;
-          const imageUrl = document.getElementById("cardImage").value;
-          const passcode = document.getElementById("password").value;
+          const title = cardTitleInput.value;
+          const shortDesc = cardShortDescInput.value;
+          const longDesc = cardLongDescInput.value;
+          const imageUrl = cardImageInput.value;
+          const password = passwordInput.value;
+
+          const card = {
+            title,
+            shortDesc,
+            longDesc,
+            imageUrl,
+            passcode: password,
+          };
 
           try {
-            const response = await axios.post(`${API_URL}/api/cards`, {
-              title,
-              shortDesc,
-              longDesc,
-              imageUrl,
-              passcode,
-            });
+            const response = await axios.post(`${API_URL}/cards`, card);
 
             if (response.status === 201) {
-              createCard({ title, shortDesc, longDesc, imageUrl });
-              document.getElementById("cardTitle").value = "";
-              document.getElementById("cardShortDesc").value = "";
-              document.getElementById("cardLongDesc").value = "";
-              document.getElementById("cardImage").value = "";
-              document.getElementById("password").value = "";
+              createCard(card);
+
+              // Reset form fields
+              cardTitleInput.value = "";
+              cardShortDescInput.value = "";
+              cardLongDescInput.value = "";
+              cardImageInput.value = "";
+              passwordInput.value = "";
 
               const modal = bootstrap.Modal.getInstance(
                 document.getElementById("addCardModal")
@@ -215,6 +230,7 @@
           }
         });
 
+        // Load cards on page load
         loadCards();
       });
     </script>

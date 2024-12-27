@@ -2,18 +2,38 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/**/*.js",
+      "src": "api/cards.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/passcode.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "home.html",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/cards",
-      "dest": "/api/cards.js"
+      "dest": "api/cards.js"
     },
     {
       "src": "/api/passcode",
-      "dest": "/api/passcode.js"
+      "dest": "api/passcode.js"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/home",
+      "dest": "/home.html"
     }
   ]
 }
