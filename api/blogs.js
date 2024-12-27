@@ -32,16 +32,19 @@ module.exports = async (req, res) => {
   }
 
   if (method === "DELETE") {
-    // Use req.body for DELETE as well
     const { id, passcode } = req.body;
 
     if (passcode !== "2516") {
       return res.status(403).send("Forbidden");
     }
 
+    const initialLength = blogs.length;
     blogs = blogs.filter((blog) => blog.id !== id);
+
+    if (blogs.length === initialLength) {
+      return res.status(404).send("Article not found.");
+    }
+
     return res.status(204).send();
   }
-
-  return res.status(405).send("Method Not Allowed");
 };
