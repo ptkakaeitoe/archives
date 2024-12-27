@@ -2,13 +2,14 @@ let blogs = []; // Temporary in-memory storage. Replace with a database for prod
 
 module.exports = (req, res) => {
   const { method } = req;
-  const passcode = req.body?.passcode;
 
   if (method === "GET") {
     return res.status(200).json(blogs);
   }
 
   if (method === "POST") {
+    const passcode = req.body?.passcode;
+
     if (passcode !== "2516") {
       return res.status(403).send("Forbidden");
     }
@@ -29,13 +30,21 @@ module.exports = (req, res) => {
   }
 
   if (method === "DELETE") {
-    if (passcode !== "2516") {
-      return res.status(403).send("Forbidden");
-    }
-    const { id } = req.body;
-    blogs = blogs.filter((blog) => blog.id !== id);
-    return res.status(204).send();
-  }
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+    req.on("end", () => {
+      const { id, passcode } = JSON.parse(body);
 
-  return res.status(405).send("Method Not Allowed");
+      if (passcode !== "2516") {
+        return res.status(403).send("Forbidden");
+      }
+
+      blogs = blogs.filter((blog) => blog.id !== id);
+      return res.status(204).send();
+    });
+  } else {
+    return res.status(405).send("Method Not Allowed");
+  }
 };

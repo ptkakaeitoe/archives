@@ -197,17 +197,22 @@
       async function deleteArticle(id) {
         const passcode = prompt("Enter passcode to delete:");
 
+        if (!passcode) {
+          alert("Passcode is required to delete an article.");
+          return;
+        }
+
         try {
           const response = await fetch(`${API_URL}/${id}`, {
             method: "DELETE",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ passcode }),
+            body: JSON.stringify({ id, passcode }), // Include id and passcode in body
           });
 
           if (response.ok) {
-            loadArticles();
+            loadArticles(); // Reload articles
           } else {
             alert("Failed to delete article. Check your passcode.");
           }
